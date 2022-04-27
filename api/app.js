@@ -5,6 +5,10 @@ var app = express();
 const dotenv = require("dotenv");
 dotenv.config();
 
+const cors = require("cors");
+const datediff = require("./utils/dateDiff");
+app.use(cors());
+
 const user_list = {};
 
 const token = process.env.TOKEN;
@@ -42,6 +46,41 @@ app.get("/batch/username", function (req, res) {
         )
         .then((resp) => {
             res.send(resp.data);
+        });
+});
+
+app.get("/validate/:username", function (req, res) {
+    const username = req.params.username;
+    axios
+        .get(`https://api.twitter.com/2/users/by/username/${username}`, config)
+        .then((resp) => {
+            if (!!resp.data.errors) {
+                res.send({ msg: resp.data.errors[0].detail });
+            }
+            const userId = resp.data.data.id;
+            axios
+                .get(
+                    `https://api.twitter.com/2/users/${userId}/tweets?start_time=2022-04-14T00:00:01Z&max_results=100`,
+                    config
+                )
+                .then((resp) => {
+                    console.log(resp)
+                    let isValid = false
+                    if (resp.data.data) {
+                        const tweet_count = resp.data.data.length;
+                        const days_gone = datediff();
+                        isValid = tweet_count >= days_gone - 2;
+                    }
+
+                    if (isValid) res.send({ msg: "You are on track!" });
+                    else res.send({ msg: "You are not on track!" });
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        })
+        .catch((err) => {
+            console.log(err);
         });
 });
 
