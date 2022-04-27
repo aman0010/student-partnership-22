@@ -1,25 +1,56 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+import { Button, Col, Form } from "react-bootstrap";
+import axios from "axios";
+import "./App.css";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [username, setUsername] = useState("");
+    const [msg, setMsg] = useState("");
+
+    function checkValid(username) {
+        if (!username) {
+            setMsg("Enter a username");
+            return;
+        }
+        axios
+            .get(`http://localhost:8000/validate/${username}`)
+            .then((res) => {
+                if (res.data.msg) setMsg(res.data.msg);
+            })
+            .catch((err) => {
+                console.log(err);
+                setMsg("Error occured");
+            });
+    }
+
+    const handleClick = (event) => {
+        event.preventDefault();
+        checkValid(username);
+    };
+
+    return (
+        <div className="App">
+            <Col md={{ span: 6, offset: 3 }} className="my-3">
+                <h3>Student Partnership</h3>
+                <Form>
+                    <Form.Group className="mb-3" controlId="formBasicUsername">
+                        <Form.Label>Username</Form.Label>
+                        <Form.Control
+                            type="text"
+                            placeholder="Enter Username"
+                            value={username}
+                            onChange={(event) => setUsername(event.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Button variant="primary" type="submit" onClick={handleClick}>
+                        Check
+                    </Button>
+                </Form>
+                <div className="my-3">{msg}</div>
+            </Col>
+        </div>
+    );
 }
 
 export default App;
