@@ -7,6 +7,7 @@ dotenv.config();
 
 const cors = require("cors");
 const datediff = require("./utils/dateDiff");
+const countTweet = require("./utils/countTweet");
 app.use(cors());
 
 const user_list = {};
@@ -60,14 +61,13 @@ app.get("/validate/:username", function (req, res) {
             const userId = resp.data.data.id;
             axios
                 .get(
-                    `https://api.twitter.com/2/users/${userId}/tweets?start_time=2022-04-14T00:00:01Z&max_results=100`,
+                    `https://api.twitter.com/2/users/${userId}/tweets?start_time=2022-04-14T00:00:01Z&max_results=100&tweet.fields=entities`,
                     config
                 )
                 .then((resp) => {
-                    console.log(resp)
                     let isValid = false
                     if (resp.data.data) {
-                        const tweet_count = resp.data.data.length;
+                        const tweet_count = countTweet(resp.data.data);
                         const days_gone = datediff();
                         isValid = tweet_count >= days_gone - 2;
                     }
